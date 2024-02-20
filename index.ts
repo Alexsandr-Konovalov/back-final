@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { createClient } from 'redis';
+import { Task } from './commonTypes';
 
 dotenv.config();
 
@@ -21,6 +22,19 @@ const connection = redisClient.connect();
 
 app.get('/', function (request, response) {
   response.send('Я живой!');
+});
+
+app.get('/tasks/', async function (request, response) {
+  const redis = await connection;
+  const savedTasks = await redis.get('tasks');
+
+  if (savedTasks === null) {
+    response.send([]);
+    return;
+  }
+
+  const parsedTasks: Task[] = JSON.parse(savedTasks);
+  response.send(parsedTasks);
 });
 
 const port = process.env.PORT;
