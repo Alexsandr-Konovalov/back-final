@@ -16,6 +16,9 @@ app.use(
   })
 );
 
+const redisClient = createClient();
+const connection = redisClient.connect();
+
 app.get('/', function (request, response) {
   response.send('Я живой!');
 });
