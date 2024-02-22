@@ -38,7 +38,7 @@ app.get('/tasks/', async function (request, response) {
   response.send(parsedTasks);
 });
 
-app.post('/tasks', async function (request, response) {
+app.post('/tasks/', async function (request, response) {
   if (
     typeof request.body.name !== 'string' ||
     typeof request.body.completed !== 'boolean' ||
