@@ -6,7 +6,6 @@ import { createClient } from 'redis';
 import { Task } from './commonTypes';
 import { uuid } from 'uuidv4';
 
-
 dotenv.config();
 
 const app = express();
@@ -26,21 +25,19 @@ app.get('/', function (request, response) {
   response.send('Я живой!');
 });
 
-
 app.get('/tasks/', async function (request, response) {
   const redis = await connection;
   const savedTasks = await redis.get('tasks');
 
   if (savedTasks === null) {
-        response.send([]);
-        return;
+    response.send([]);
+    return;
   }
 
-   const parsedTasks: Task[] = JSON.parse(savedTasks);
-   response.send(parsedTasks);
+  const parsedTasks: Task[] = JSON.parse(savedTasks);
+  response.send(parsedTasks);
 });
 
-  
 app.post('/tasks', async function (request, response) {
   if (
     typeof request.body.name !== 'string' ||
@@ -58,10 +55,10 @@ app.post('/tasks', async function (request, response) {
     completed: request.body.completed,
     deadline: request.body.deadline,
   };
-  
+
   const redis = await connection;
   const savedTasks = await redis.get('tasks');
-  
+
   if (savedTasks === null) {
     const taskList = [task];
     await redis.set('tasks', JSON.stringify(taskList));
@@ -76,6 +73,42 @@ app.post('/tasks', async function (request, response) {
   response.send(parsedTasks);
 });
 
+app.delete('/tasks/:id', async function (request, response) {
+  const id = request.params.id;
+
+  const redis = await connection;
+  const savedTasks = await redis.get('tasks');
+
+  if (savedTasks === null) {
+    response.send(404);
+    return;
+  }
+
+  const parsedTasks: Task[] = JSON.parse(savedTasks);
+  const taskToDelete = parsedTasks.find(function (task) {
+    if (task.id === id) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  if (taskToDelete === undefined) {
+    response.send(404);
+    return;
+  }
+
+  const keptTasks = parsedTasks.filter(function (task) {
+    if (task.id !== id) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  await redis.set('tasks', JSON.stringify(keptTasks));
+  response.send(keptTasks);
+});
 
 const port = process.env.PORT;
 app.listen(port, function () {
